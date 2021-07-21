@@ -1,0 +1,7 @@
+---
+- hosts: [development]
+  user: ubuntu
+  become: yes
+  become_user: root
+  roles:
+    - { role: postgres, tags: [postgres] }
