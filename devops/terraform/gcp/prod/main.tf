@@ -5,7 +5,7 @@ provider "google" {
 }
 
 module "instance" {
-  source       = "./modules/instance"
+  source       = "../modules/instance"
   environment  = var.environment
   product_name = var.product_name
   subnet_id    = module.network.subnet_id
@@ -13,7 +13,7 @@ module "instance" {
 }
 
 module "network" {
-  source       = "./modules/network"
+  source       = "../modules/network"
   environment  = var.environment
   product_name = var.product_name
 }
