@@ -1,11 +1,11 @@
 resource "google_compute_instance" "default" {
-  name         = "${var.environment}-${env.product_name}-instance"
-  machine_type = "e2-micro"
+  name         = "${var.environment}-${var.product_name}-vm"
+  machine_type = "${var.machine_type}"
   tags         = ["ssh", "http", "https"]
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-2204-jammy-v20230727"
+      image = "${var.so_image}"
     }
   }
 
