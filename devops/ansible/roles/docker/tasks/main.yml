@@ -1,0 +1,53 @@
+---
+- name: Install docker dependencies
+  become: yes
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+    state: present
+
+- name: Add docker official gpg key
+  become: yes
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add docker apt repository
+  become: yes
+  apt_repository:
+    repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    update_cache: yes
+
+- name: Install docker
+  become: yes
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: true
+
+- name: Install docker python module
+  become: yes
+  pip:
+    name: docker
+    state: present
+
+- name: Docker system prune every 14 hours
+  become: yes
+  cron:
+    name: 'docker-prune'
+    minute: '0'
+    hour: '*/12'
+    job: 'docker container prune -f'
+
+- name: Add ubuntu user to docker group
+  become: yes
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  with_items: "{{ ansible_user_id }}"

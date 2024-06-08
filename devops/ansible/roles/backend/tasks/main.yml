@@ -1,0 +1,56 @@
+---
+
+- name: Login into Github Docker Image Registry
+  shell: "docker login https://ghcr.io -u $REPO_OWNER -p $REPO_CR_PAT"
+  environment:
+    REPO_OWNER: "{{ repo_owner }}"
+    REPO_CR_PAT: "{{ repo_cr_pat }}"
+
+- name: "Pull Docker Image ghcr.io/{{ repo_owner }}/{{ repo_gh_package }}"
+  docker_image:
+    name: "ghcr.io/{{ repo_owner }}/{{ repo_gh_package }}"
+    tag: "{{ repo_gh_version }}"
+    state: present
+    source: pull
+    force_source: yes
+
+- name: "Docker - Start the backend container"
+  docker_container:
+    name: "{{ repo_gh_package }}-{{ repo_gh_version }}"
+    image: "ghcr.io/{{ repo_owner }}/{{ repo_gh_package }}:{{ repo_gh_version }}"
+    state: started
+    recreate: yes
+    ports:
+      - "8000:{{ back_port }}"
+    env:
+      DEBUG: "True"
+      SECRET_KEY: "{{ secret_key }}"
+      LANGUAGE_CODE: "{{ django_language }}"
+      TIME_ZONE: "{{ django_timezone }}"
+      DATABASE_URL: "postgres://{{ database_user }}:{{ database_password }}@{{ database_host }}:{{ database_port }}/{{ database_name }}"
+      ALLOWED_HOSTS: "{{ allowed_hosts }}"
+      CSRF_TRUSTED_ORIGINS: "https://{{ allowed_hosts }},http://{{ allowed_hosts }}"
+      DJ_CASAMENTO_MODO_SAVE_THE_DATE: "True"
+      DJ_EMAIL_NOTIFICATIONS: "False"
+
+    command: gunicorn --bind :8000 --workers 2 {{ django_settings }}.wsgi:application
+    #network_mode: host
+
+- name: Execute the DB migration
+  command: "docker exec {{ repo_gh_package }}-{{ repo_gh_version }} python manage.py migrate"
+
+- name: Execute the collect static
+  command: "docker exec {{ repo_gh_package }}-{{ repo_gh_version }} python manage.py collectstatic --no-input"
+
+
+
+#- name: "Docker Login GCP Registry"
+#  shell: docker login -u _json_key --password-stdin https://gcr.io < ~/.docker/gcr_credentials.json
+
+# - name: "Docker - Pull Image From Registry"
+#   docker_image:
+#     name: "{{ docker_registry_back }}"
+#     tag: "{{ docker_image_tag }}"
+#     state: present
+#     source: pull
+#     force_source: yes

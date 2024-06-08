@@ -1,0 +1,46 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:DescribeAutoScalingInstances",
+        "iam:PassRole",
+        "iam:CreateServiceLinkedRole",
+        "autoscaling:DescribeScalingActivities",
+        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DeleteAutoScalingGroup",
+        "autoscaling:TerminateInstanceInAutoScalingGroup",
+        "autoscaling:CreateAutoScalingGroup",
+        "autoscaling:SetDesiredCapacity",
+        "ec2:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:UploadLayerPart",
+        "ecr:ListImages",
+        "ecr:InitiateLayerUpload",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetRepositoryPolicy",
+        "ecr:PutImage"
+      ],
+      "Resource": [
+        "arn:aws:ecr:*:*:repository/django",
+        "arn:aws:ecr:*:*:repository/django/*"
+      ]
+    }
+  ]
+}

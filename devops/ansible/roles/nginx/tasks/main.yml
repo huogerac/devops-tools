@@ -1,0 +1,31 @@
+---
+
+- name: install nginx
+  become: yes
+  apt:
+    pkg: nginx
+    state: present
+    update_cache: true
+  notify:
+    - reload nginx
+
+- name: ensure that the default site is disabled
+  become: yes
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  notify:
+    - reload nginx
+
+- name: ensure nginx service is started
+  become: yes
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: setup nginx conf
+  become: yes
+  template:
+    src: nginx/nginx.conf
+    dest: /etc/nginx/nginx.conf
+  notify:
+    - reload nginx
