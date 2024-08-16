@@ -2,3 +2,12 @@
 database_name: tabnews_dev
 database_user: tabnews
 database_password: xYkR7891-some-great-pass-here
+
+# postgis
+pg_version: 14
+pg_conf: "/etc/postgresql/{{ pg_version }}/main/postgresql.conf"
+pg_hba: "/etc/postgresql/{{ pg_version }}/main/pg_hba.conf"
+pg_dir: "/var/lib/postgresql/{{ pg_version }}/main"
+database_name: "test"
+database_user: "test"
+database_password: "test"

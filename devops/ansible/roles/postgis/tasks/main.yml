@@ -1,0 +1,100 @@
+---
+- name: set locale
+    lineinfile: dest=/etc/default/locale line="LC_ALL=C"
+
+# - name: Update all packages to the latest version
+#   apt:
+#     upgrade: dist
+
+- name: Add postgresql apt repository key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+    update_cache: yes
+
+- name: add postgres repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    update_cache: yes
+
+- name: install pg
+  apt:
+    name: "{{ item }}"
+    state: installed
+    update_cache: yes
+  with_items:
+  - "python3-psycopg2"
+  - "postgresql-{{ pg_version }}"
+  - "postgresql-contrib-{{ pg_version }}"
+  - "postgresql-{{ pg_version }}-postgis-3"
+  - "postgis"
+  - "osm2pgrouting"
+
+- name: ensure the PostgreSQL service is running
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+# - name: edit postgresql.conf to change listen address to *
+#   replace:
+#     dest: "{{ pg_conf }}"
+#     regexp: "#listen_addresses = 'localhost'"
+#     replace: "listen_addresses = '*'"
+#     backup: yes
+#   notify: restart postgresql
+- name: Change listen_addresses to '*'
+  lineinfile:
+    dest: "/etc/postgresql/{{ pg_version }}/main/postgresql.conf"
+    regexp: "^#listen_addresses"
+    line: "listen_addresses = '*'"
+    state: present
+    backup: yes
+  notify:
+    - restart postgresql
+
+# - name: append to pg_hba.conf to add password auth
+#   lineinfile:
+#     dest: "{{ pg_hba }}"
+#     line: "host    all             all             all                     md5"
+#   notify: restart postgresql
+- name: Configure pg_hba.conf
+  template:
+    src: ./templates/pg_hba.conf.j2
+    dest: "/etc/postgresql/{{ pg_version }}/main/pg_hba.conf"
+    owner: postgres
+  notify:
+    - restart postgresql
+
+- name: explicitly set default client_encoding
+  lineinfile:
+    dest: "{{ pg_conf }}"
+    line: "client_encoding = utf8"
+  notify: restart postgresql
+
+- name: create the database user
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: "{{ database_user }}"
+    password: "{{ database_password }}"
+    encrypted: yes
+
+- name: create the database
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ database_name }}"
+    owner: "{{ database_user }}"
+    encoding: UTF-8
+    lc_collate: en_US.utf8
+    lc_ctype: en_US.utf8
+    template: template0
+
+- name: install postgis extension
+  become: true
+  become_user: postgres
+  postgresql_ext:
+    name: postgis
+    db: "{{ database_name }}"
