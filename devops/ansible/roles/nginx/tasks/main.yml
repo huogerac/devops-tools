@@ -9,11 +9,11 @@
   notify:
     - reload nginx
 
-- name: ensure that the default site is disabled
-  become: yes
-  file: path=/etc/nginx/sites-enabled/default state=absent
-  notify:
-    - reload nginx
+# - name: ensure that the default site is disabled
+#   become: yes
+#   file: path=/etc/nginx/sites-enabled/default state=absent
+#   notify:
+#     - reload nginx
 
 - name: ensure nginx service is started
   become: yes
@@ -29,3 +29,6 @@
     dest: /etc/nginx/nginx.conf
   notify:
     - reload nginx
+
+#  90  sudo nginx -t
+#  91  sudo systemctl restart nginx

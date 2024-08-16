@@ -1,0 +1,25 @@
+---
+
+- name: Upgrade system
+  become: yes
+  apt: upgrade=dist update_cache=yes
+
+- name: Install SO Dependencies
+  become: yes
+  apt:
+    name:
+      - build-essential
+      - libpq-dev
+      - curl
+      - vim
+      - locales
+      - apt-utils
+      - python3-pip
+    state: present
+
+- name: adding existing user "{{ linux_user }}" to group www-data
+  become: yes
+  user:
+    name: "{{ linux_user }}"
+    groups: www-data
+    append: yes

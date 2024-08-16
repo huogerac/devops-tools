@@ -1,0 +1,83 @@
+---
+
+- name: Git Clone the repo
+  ansible.builtin.git:
+    repo: "{{ git_repo }}"
+    dest: "/home/{{ linux_user }}/{{ app_name }}"
+    version: "{{ git_repo_branch }}"
+    depth: 1
+
+- name: Install Python Dependencies
+  ansible.builtin.pip:
+    requirements: "/home/{{ linux_user }}/{{ app_name }}/requirements.txt"
+
+
+- name: Execute the DB migration
+  ansible.builtin.shell: python3 ./manage.py migrate
+  args:
+    chdir: "/home/{{ linux_user }}/{{ app_name }}/"
+  environment:
+    DATABASE_URL: "{{ database_url }}"
+
+- name: Execute the Collect Static
+  ansible.builtin.shell: python3 ./manage.py collectstatic --noinput
+  args:
+    chdir: "/home/{{ linux_user }}/{{ app_name }}/"
+  environment:
+    DATABASE_URL: "{{ database_url }}"
+
+
+### Cria SYSTEMD process
+- name: Setup systemd for gunicorn service
+  become: yes
+  template:
+    src: service.j2
+    dest: /etc/systemd/system/gunicorn.service
+
+- name: setup systemd gunicorn socket
+  become: yes
+  template:
+    src: socket.j2
+    dest: /etc/systemd/system/gunicorn.socket
+
+- name: Just force systemd to Reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Just force systemd to re-execute itself
+  ansible.builtin.systemd_service:
+    daemon_reexec: true
+
+- name: "Just force systemd to re-execute itself"
+  shell: "{{ item }}"
+  with_items:
+    - sudo systemctl start gunicorn.socket
+    - sudo systemctl enable gunicorn.socket
+    - sudo systemctl daemon-reload
+    - sudo systemctl restart gunicorn
+
+
+# sudo systemctl start gunicorn.socket
+# sudo systemctl enable gunicorn.socket
+# sudo systemctl status gunicorn.socket
+# sudo systemctl status gunicorn
+# sudo systemctl daemon-reload
+# sudo systemctl restart gunicorn
+
+
+# - name: Set environment variables
+#   become: yes
+#   os_environment:
+#     - key: DATABASE_URL
+#       value : "{{ database_url }}"
+#     - key: ALLOWED_HOSTS
+#       value : "{{ server_name }}"
+#     - key: CSRF_TRUSTED_ORIGINS 
+#       value : "http://{{ server_name }}"
+#   lineinfile:
+#     path: "/etc/environment"
+#     state: present
+#     regexp: "^{{ item.key }}="
+#     line: "{{ item.key }}={{ item.value}}"
+#   with_items: "{{ os_environment }}"
+

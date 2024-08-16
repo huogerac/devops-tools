@@ -1,0 +1,11 @@
+---
+
+linux_user: ubuntu
+git_repo: https://github.com/huogerac/casamento_tainan_ana.git
+git_repo_branch: dev
+server_name: 18.226.104.38
+app_name: app_django
+database_url: sqlite:///db_local.sqlite3
+django_secret_key: pGNqduRFkB4K9C2vijOmUDa2kPtUhArN
+django_settings: anaetainan.anaetainan.wsgi
+project_name: back-anaetainan

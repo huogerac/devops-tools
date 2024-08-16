@@ -1,0 +1,7 @@
+---
+- hosts: [dev]
+  roles:
+    - { role: ubuntu, tags: [ubuntu] }
+    - { role: nginx, tags: [nginx] }
+    - { role: back_django, tags: [back_django] }
+    - { role: back_django_nginx, tags: [back_django_nginx] }

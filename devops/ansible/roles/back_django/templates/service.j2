@@ -1,0 +1,25 @@
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+
+[Service]
+User={{ linux_user }}
+Group={{ linux_user }}
+Environment="SECRET_KEY={{ django_secret_key }}"
+Environment="DATABASE_URL={{ database_url }}"
+Environment="ALLOWED_HOSTS={{ server_name }}"
+Environment="CSRF_TRUSTED_ORIGINS=https://{{ server_name }},http://{{ server_name }}"
+Environment="DJ_CASAMENTO_MODO_SAVE_THE_DATE=False"
+Environment="DJ_EMAIL_NOTIFICATIONS=False"
+Environment="DJ_CASAMENTO_LOCAL=Capela Nossa Senhora da Paz"
+WorkingDirectory=/home/{{ linux_user }}/{{ app_name }}
+ExecStart=/home/{{ linux_user }}/.local/bin/gunicorn \
+          --access-logfile - \
+          --workers 2 \
+          --bind unix:/run/gunicorn.sock \
+          {{ django_settings }}:application
+
+[Install]
+WantedBy=multi-user.target
