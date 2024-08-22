@@ -1,0 +1,54 @@
+---
+
+- name: Upgrade system
+  become: yes
+  apt: upgrade=dist update_cache=yes
+
+- name: install letsencrypt
+  become: yes
+  apt: name=letsencrypt state=latest
+
+- name: create letsencrypt directory
+  become: yes
+  file: name=/var/www/letsencrypt state=directory
+
+- name: Ensure nginx service is started
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Remove default nginx config
+  become: yes
+  file: name=/etc/nginx/sites-enabled/default state=absent
+
+- name: Install nginx site for letsencrypt requests
+  become: yes
+  template:
+    src: "nginx/nginx-http.conf"
+    dest: "/etc/nginx/sites-enabled/http"
+  notify:
+    - reload nginx
+
+- name: Create letsencrypt certificate
+  become: yes
+  shell: letsencrypt certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }}
+  args:
+    creates: /etc/letsencrypt/live/{{ domain_name }}
+
+- name: Generate dhparams
+  become: yes
+  shell: openssl dhparam -out /etc/nginx/dhparams.pem 2048
+  args:
+    creates: /etc/nginx/dhparams.pem
+
+- name: Remove default http config
+  become: yes
+  file: name=/etc/nginx/sites-enabled/http state=absent
+
+- name: Add letsencrypt cronjob for cert renewal
+  become: yes
+  cron:
+    name: letsencrypt_renewal
+    special_time: weekly
+    job: letsencrypt --renew certonly -n --webroot -w /var/www/letsencrypt -m {{ letsencrypt_email }} --agree-tos -d {{ domain_name }} && service nginx reload

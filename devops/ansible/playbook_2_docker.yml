@@ -1,0 +1,9 @@
+---
+- hosts: [dev]
+  roles:
+    - { role: docker, tags: [docker] }
+    - { role: nginx, tags: [nginx] }
+    - { role: ssl, tags: [ssl]}
+    - { role: back_dj_docker, tags: [back_dj_docker] }
+    - { role: back_dj_docker_nginx, tags: [back_dj_docker_nginx] }
+

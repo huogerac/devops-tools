@@ -1,0 +1,37 @@
+# ---
+
+# SSL
+domain_name: meusite.com
+letsencrypt_email: hello@meusite.com
+
+# BACK_DJ_DOCKER
+repo_owner: meugithub
+repo_gh_package: meurepo
+repo_gh_version: main
+repo_cr_pat: ?
+django_settings: meurepo.meurepo
+back_port: 8000
+secret_key: adicionar-um-secret-para-o-django
+django_language: pt-BR
+django_timezone: America/Sao_Paulo
+allowed_hosts: meusite.com
+
+# STORAGE
+bucket_name: meu-s3-bucket
+aws_region: sa-east-1
+aws_access_key_id: ?
+aws_secret_access_key: ?
+aws_location: static
+
+# DATABASE
+#database_url: "postgres://mydb:uma-senha-bem-dificil@mydbdb.cdum0e2qgti6.sa-east-1.rds.amazonaws.com:5432/mydbdb"
+database_url: "sqlite:///meudb_local.sqlite3"
+
+# NGINX / STORAGE
+# django_http_static  --> static apontando para pasta direto no servidor
+# django_http         --> static apontando para S3 via django
+# django_http_bucket  --> static apontando diretamente para S3
+# django_ssl_bucket   --> static apontando diretametne para S3 com https
+nginx_conf: django_http_bucket
+bucket_main_folder: static
+bucket_prefix: public    # Ver como a infra criou!

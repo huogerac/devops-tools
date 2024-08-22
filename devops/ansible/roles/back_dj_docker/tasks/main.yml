@@ -1,0 +1,45 @@
+---
+
+- name: Login into Github Docker Image Registry
+  shell: "docker login https://ghcr.io -u $REPO_OWNER -p $REPO_CR_PAT"
+  environment:
+    REPO_OWNER: "{{ repo_owner }}"
+    REPO_CR_PAT: "{{ repo_cr_pat }}"
+
+- name: "Pull Docker Image ghcr.io/{{ repo_owner }}/{{ repo_gh_package }}"
+  docker_image:
+    name: "ghcr.io/{{ repo_owner }}/{{ repo_gh_package }}"
+    tag: "{{ repo_gh_version }}"
+    state: present
+    source: pull
+    force_source: yes
+
+- name: "Docker - Start the backend container"
+  docker_container:
+    name: "{{ repo_gh_package }}-{{ repo_gh_version }}"
+    image: "ghcr.io/{{ repo_owner }}/{{ repo_gh_package }}:{{ repo_gh_version }}"
+    state: started
+    recreate: yes
+    ports:
+      - "8000:{{ back_port }}"
+    env:
+      DEBUG: "False"
+      SECRET_KEY: "{{ secret_key }}"
+      LANGUAGE_CODE: "{{ django_language }}"
+      TIME_ZONE: "{{ django_timezone }}"
+      DATABASE_URL: "{{ database_url }}"
+      ALLOWED_HOSTS: "ec2-18-228-220-152.sa-east-1.compute.amazonaws.com,{{ allowed_hosts }}"
+      CSRF_TRUSTED_ORIGINS: "https://ec2-18-228-220-152.sa-east-1.compute.amazonaws.com,http://{{ allowed_hosts }}"
+      AWS_STORAGE_BUCKET_NAME: "{{ bucket_name }}"
+      AWS_REGION_NAME: "{{ aws_region }}"
+      AWS_ACCESS_KEY_ID: "{{ aws_access_key_id }}"
+      AWS_SECRET_ACCESS_KEY: "{{ aws_secret_access_key }}"
+      AWS_STATIC_LOCATION: "{{ aws_location }}"
+
+    command: gunicorn --bind :8000 --workers 2 {{ django_settings }}.wsgi:application
+
+- name: Execute the DB migration
+  command: "docker exec {{ repo_gh_package }}-{{ repo_gh_version }} python manage.py migrate"
+
+- name: Execute the collect static
+  command: "docker exec {{ repo_gh_package }}-{{ repo_gh_version }} python manage.py collectstatic --no-input"
