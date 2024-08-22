@@ -1,11 +1,11 @@
-resource "aws_iam_instance_profile" "django_prod_profile" {
-  name = "django_prod_profile"
+resource "aws_iam_instance_profile" "django_profile" {
+  name = "django_profile"
   role = aws_iam_role.ec2_django_access_role.name
 }
 
 resource "aws_iam_role" "ec2_django_access_role" {
-  name = "django-prod-access-role"
-  assume_role_policy = file("assumerolepolicy.json")
+  name = "django_instance-access-role"
+  assume_role_policy = file("ec2_assumerolepolicy.json")
 }
 
 resource "aws_iam_policy_attachment" "django-iam-attach" {
@@ -15,15 +15,15 @@ resource "aws_iam_policy_attachment" "django-iam-attach" {
 }
 
 resource "aws_iam_policy" "policy" {
-  name = "django-prod-access-policy"
-  description = "django-prod-policy"
-  policy = file("policy_django_permissions.json")
+  name = "django_instance-access-policy"
+  description = "django_instance-policy"
+  policy = file("ec2_policy_django_permissions.json")
 }
 
 
-resource "aws_security_group" "django-prod-sg" {
-  name = "django-prod-sg"
-  description = "Django Prod Security Group"
+resource "aws_security_group" "django_instance-sg" {
+  name = "django_instance-sg"
+  description = "Django Dev Security Group"
 
   ingress {
     cidr_blocks = [
@@ -67,17 +67,17 @@ resource "aws_security_group" "django-prod-sg" {
   }
 
   tags = {
-    Name = "django-sg-prod"
+    Name = "django-sg"
     Environment = "${var.environment}"
   }
 }
 
-resource "aws_instance" "django-prod" {
+resource "aws_instance" "django_instance" {
   availability_zone = var.availability_zone
   ami = var.ami
-  security_groups = ["${aws_security_group.django-prod-sg.name}"]
+  security_groups = ["${aws_security_group.django_instance-sg.name}"]
   instance_type = var.instance_type
-  iam_instance_profile = aws_iam_instance_profile.django_prod_profile.name
+  iam_instance_profile = aws_iam_instance_profile.django_profile.name
   user_data = file("ec2_userdata.sh")
   key_name = "${var.key_name}"
   associate_public_ip_address = true
@@ -91,13 +91,56 @@ resource "aws_instance" "django-prod" {
   }
 
   tags = {
-    Name = "django-prod"
+    Name = "django_instance"
     Environment = "${var.environment}"
   }
 
   volume_tags = {
-    Name = "django-prod"
+    Name = "django_instance"
     Environment = "${var.environment}"
   }
 }
 
+### Elastic IP
+resource "aws_eip" "lb" {
+  instance = aws_instance.django_instance.id
+
+  tags = {
+    Name = "django-elastic-ip"
+    Environment = "${var.environment}"
+  }
+}
+
+### Route 53
+# resource "aws_route53_zone" "primary" {
+#   name = "${var.embalae_dns_url}"
+
+#   tags = {
+#     Name = "django-zone"
+#     Environment = "${var.environment}"
+#   }
+# }
+
+# resource "aws_route53_record" "stars" {
+#   zone_id = aws_route53_zone.primary.zone_id
+#   name    = "*.${var.embalae_dns_url}"
+#   type    = "A"
+#   ttl     = 300
+#   records = [aws_eip.lb.public_ip]
+# }
+
+# resource "aws_route53_record" "www" {
+#   zone_id = aws_route53_zone.primary.zone_id
+#   name    = "www.${var.embalae_dns_url}"
+#   type    = "A"
+#   ttl     = 300
+#   records = [aws_eip.lb.public_ip]
+# }
+
+# resource "aws_route53_record" "empty" {
+#   zone_id = aws_route53_zone.primary.zone_id
+#   name    = "${var.embalae_dns_url}"
+#   type    = "A"
+#   ttl     = 300
+#   records = [aws_eip.lb.public_ip]
+# }

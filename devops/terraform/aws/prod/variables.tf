@@ -1,5 +1,4 @@
-
-# GERAL
+### COMMON
 variable "environment" {
   type    = string
   default = "prod"
@@ -15,7 +14,50 @@ variable "availability_zone" {
   default = "sa-east-1a"
 }
 
-# EC2
+### STORAGE - S3 Bucket
+variable "embalae_aws_s3_bucket" {
+  type = string
+  default = "meubucket-prod-bucket"
+}
+
+variable "embalae_dns_url" {
+  type = string
+  default = "meusite.com"
+}
+
+### DATABASE - RDS
+variable "engine_version" {
+  type = string
+  default = "15"
+}
+
+variable "instance_class" {
+  type = string
+  default = "db.t3.micro"
+}
+
+variable "database_name" {
+  type = string
+  default = "embalaedevdb"
+}
+
+variable "database_username" {
+  type = string
+  default = "embalaedev"
+}
+
+variable "database_password" {
+  type = string
+  default = "colocar-uma-senha-longa-e-segura-aqui"
+}
+
+variable "storage" {
+  type = number
+  default = 20
+}
+
+
+### INSTANCE - EC2
 variable "instance_type" {
   type = string
   default = "t2.micro"
@@ -33,41 +75,10 @@ variable "volume_size" {
 
 variable "key_name" {
   type = string
-  default = "minha_chave.pem_criada_na_aws"
+  default = "minha-chave"
 }
 
 variable "backend_port" {
   type = number
   default = 8000
-}
-
-# DATABASE
-variable "engine_version" {
-  type = string
-  default = "15"
-}
-
-variable "instance_class" {
-  type = string
-  default = "db.t3.micro"
-}
-
-variable "database_name" {
-  type = string
-  default = "djangodb"
-}
-
-variable "database_username" {
-  type = string
-  default = "djangodbuser"
-}
-
-variable "database_password" {
-  type = string
-  default = "484b324fc497X20b24_trocar_e_nao_manter_isto_no_git"
-}
-
-variable "storage" {
-  type = number
-  default = 20
 }

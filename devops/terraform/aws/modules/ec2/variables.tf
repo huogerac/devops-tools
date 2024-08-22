@@ -29,3 +29,7 @@ variable "key_name" {
 variable "backend_port" {
     type = number
 }
+
+variable "embalae_dns_url" {
+  type = string
+}
